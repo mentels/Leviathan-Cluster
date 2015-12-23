@@ -9,7 +9,8 @@ $keys = <<SCRIPT
 cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
-chown vagrant: id_rsa
+chown vagrant: id_rsa*
+docker cp /vagrant/keys/id_rsa* ivanos/leviathan:multi-host-demo
 SCRIPT
 
 $ipv4_forwarding = <<SCRIPT
@@ -29,17 +30,26 @@ Vagrant.configure(2) do |config|
     vb.memory = 2048
     vb.cpus = 2
   end
+  
   config.hostmanager.enabled = true
   config.hostmanager.manage_host = true
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
   config.ssh.forward_agent = true
-  config.vm.synced_folder '.', '/vagrant', nfs: true
+  config.vm.synced_folder '.', '/vagrant'
   config.vm.boot_timeout = 60
+
+  config.git.add_repo do |r|
+    r.target = 'https://github.com/ivanos/dockerfiles.git'
+    r.path = '/tmp/ivanos_dockerfiles'
+    r.branch = 'multi-host'
+  end
   
   config.vm.provision "docker" do |d|
-    d.version =  "1.9.0"
+    d.version =  "1.9.1"
     d.pull_images "ivanos/leviathan:rel-0.8.1"
+    d.build_image '/tmp/ivanos_dockerfiles/linc', args: "-t local/linc"
+    d.build_image '/tmp/ivanos_dockerfiles/leviathan', args: "-t ivanos/leviathan:multi-host-demo"
   end
 
   config.vm.provision "shell", inline: $ssh
