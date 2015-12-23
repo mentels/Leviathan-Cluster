@@ -10,7 +10,7 @@ cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
 chown vagrant: id_rsa*
-docker exec mkdir -p /root/.ssh
+docker exec leviathan: mkdir -p /root/.ssh
 docker cp id_rsa leviathan:/root/.ssh/id_rsa
 SCRIPT
 
@@ -26,6 +26,9 @@ apt-get install -y emacs24-nox
 SCRIPT
 
 INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs]
+
+LINC_IMAGE = "mentels/dockerfiles:linc-multi-host-demo"
+LEVIATHAN_IMAGE = "mentels/dockerfiles:leviathan-multi-host-demo"
 
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
@@ -43,20 +46,11 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder '.', '/vagrant'
   config.vm.boot_timeout = 60
 
-  config.git.add_repo do |r|
-    r.target = 'https://github.com/ivanos/dockerfiles.git'
-    r.path = 'ivanos_dockerfiles'
-    r.branch = 'multi-host'
-    r.clone_in_host = true
-  end
-  
   config.vm.provision "docker" do |d|
     d.version =  "1.9.1"
-    d.pull_images "ivanos/leviathan:rel-0.8.1"
-    d.build_image '/vagrant/ivanos_dockerfiles/linc', args: "-t local/linc"
-    d.build_image '/vagrant/ivanos_dockerfiles/leviathan', args: "-t ivanos/leviathan:multi-host-demo"
+    d.pull_images LEVIATHAN_IMAGE
     d.run "leviathan",
-          image: "ivanos/leviathan:multi-host-demo",
+          image: LEVIATHAN_IMAGE
           args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
   end
 
@@ -71,6 +65,8 @@ Vagrant.configure(2) do |config|
       node.vm.network :forwarded_port, guest: 8080, host: 8080+i
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
       node.vm.provision "docker" do |d|
+        if i == 1
+          d.pull_images LINC_IMAGE
         d.run "cont#{2*i-1}"
         d.run "cont#{2*i}"
       end
