@@ -41,15 +41,16 @@ Vagrant.configure(2) do |config|
 
   config.git.add_repo do |r|
     r.target = 'https://github.com/ivanos/dockerfiles.git'
-    r.path = '/tmp/ivanos_dockerfiles'
+    r.path = 'ivanos_dockerfiles'
     r.branch = 'multi-host'
+    r.clone_in_host = true
   end
   
   config.vm.provision "docker" do |d|
     d.version =  "1.9.1"
     d.pull_images "ivanos/leviathan:rel-0.8.1"
-    d.build_image '/tmp/ivanos_dockerfiles/linc', args: "-t local/linc"
-    d.build_image '/tmp/ivanos_dockerfiles/leviathan', args: "-t ivanos/leviathan:multi-host-demo"
+    d.build_image '/vagrant/ivanos_dockerfiles/linc', args: "-t local/linc"
+    d.build_image '/vagrant/ivanos_dockerfiles/leviathan', args: "-t ivanos/leviathan:multi-host-demo"
   end
 
   config.vm.provision "shell", inline: $ssh
