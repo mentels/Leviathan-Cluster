@@ -1,6 +1,6 @@
 .PHONY: run vagrant-plugins
 
-all: keys id_rsa vagrant-plugings run
+all: keys id_rsa vagrant-plugins run
 
 run:
 	vagrant up
