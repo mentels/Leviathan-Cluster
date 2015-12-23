@@ -74,18 +74,19 @@ Vagrant.configure(2) do |config|
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
 
       if i == 1
-        node.vm.provision "docker", images: [LINC_IMAGE]
+        node.vm.provision "docker", images: [LINC_IMAGE, LEVIATHAN_IMAGE]
       end
 
       if i != 1
         node.vm.provision "shell", inline: $leviathan_transfer, args: "#{i}"
-        node.vm.provision "docker" do |d|
-          d.run "leviathan",
-                image: LEVIATHAN_IMAGE,
-                args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
-          d.run "cont#{2*i-1}", image: "ubuntu"
-          d.run "cont#{2*i}", image: "ubuntu"
-        end
+      end
+
+      node.vm.provision "docker" do |d|
+        d.run "leviathan",
+              image: LEVIATHAN_IMAGE,
+              args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
+        d.run "cont#{2*i-1}", image: "ubuntu"
+        d.run "cont#{2*i}", image: "ubuntu"
       end
       node.vm.provision "shell", inline: $docker_keys  
     end
