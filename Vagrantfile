@@ -10,7 +10,7 @@ cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
 chown vagrant: id_rsa*
-docker cp /vagrant/keys/id_rsa* ivanos/leviathan:multi-host-demo
+docker cp /vagrant/keys/id_rsa* ivanos/leviathan:multi-host-demo:/root/.ssh
 SCRIPT
 
 $ipv4_forwarding = <<SCRIPT
