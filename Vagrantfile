@@ -1,3 +1,6 @@
+LINC_IMAGE = "mentels/dockerfiles:linc-multi-host-demo"
+LEVIATHAN_IMAGE = "mentels/dockerfiles:leviathan-multi-host-demo"
+
 $ssh = <<SCRIPT
 SSHD_CONFIG="/etc/ssh/sshd_config"
 TUNNEL="PermitTunnel yes"
@@ -38,9 +41,6 @@ ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE
 SCRIPT
 
 INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs, $pv]
-
-LINC_IMAGE = "mentels/dockerfiles:linc-multi-host-demo"
-LEVIATHAN_IMAGE = "mentels/dockerfiles:leviathan-multi-host-demo"
 
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
