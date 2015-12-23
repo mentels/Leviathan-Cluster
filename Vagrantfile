@@ -33,8 +33,8 @@ LEVIATHAN_IMAGE = "mentels/dockerfiles:leviathan-multi-host-demo"
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.provider "virtualbox" do |vb|
-    vb.memory = 2048
-    vb.cpus = 2
+    vb.memory = 4096
+    vb.cpus = 4
   end
   
   config.hostmanager.enabled = true
@@ -45,14 +45,6 @@ Vagrant.configure(2) do |config|
   config.ssh.forward_agent = true
   config.vm.synced_folder '.', '/vagrant'
   config.vm.boot_timeout = 60
-
-  config.vm.provision "docker" do |d|
-    d.version =  "1.9.1"
-    d.pull_images LEVIATHAN_IMAGE
-    d.run "leviathan",
-          image: LEVIATHAN_IMAGE,
-          args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
-  end
 
   INLINES.each do |i|
     config.vm.provision "shell", inline: i
@@ -65,12 +57,19 @@ Vagrant.configure(2) do |config|
       node.vm.network :forwarded_port, guest: 8080, host: 8080+i
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
       node.vm.provision "docker" do |d|
+        d.version =  "1.9.1"
         if i == 1
           d.pull_images LINC_IMAGE
         end
+        d.run "leviathan",
+              image: LEVIATHAN_IMAGE,
+              args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
         d.run "cont#{2*i-1}", image: "ubuntu"
         d.run "cont#{2*i}", image: "ubuntu"
       end
+    end
+    node.vm.provision "shell" do |s|
+      s.inline "ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load' "
     end
   end
   
