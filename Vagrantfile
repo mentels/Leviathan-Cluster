@@ -72,6 +72,7 @@ Vagrant.configure(2) do |config|
       node.vm.provision "docker" do |d|
         d.run "cont#{2*i-1}"
         d.run "cont#{2*i}"
+      end
     end
   end
   
