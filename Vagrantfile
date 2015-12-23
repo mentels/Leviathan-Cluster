@@ -10,7 +10,7 @@ cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
 chown vagrant: id_rsa*
-docker cp /vagrant/keys/id_rsa leviathan:/root/.ssh
+docker cp /vagrant/keys/id_rsa leviathan:/root/.ssh/id_rsa
 SCRIPT
 
 $ipv4_forwarding = <<SCRIPT
@@ -24,6 +24,8 @@ $emacs = <<SCRIPT
 apt-get install -y emacs24-nox
 SCRIPT
 
+INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs]
+
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.provider "virtualbox" do |vb|
@@ -35,6 +37,7 @@ Vagrant.configure(2) do |config|
   config.hostmanager.manage_host = true
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
+  config.cache.scope = :box
   config.ssh.forward_agent = true
   config.vm.synced_folder '.', '/vagrant'
   config.vm.boot_timeout = 60
@@ -56,31 +59,20 @@ Vagrant.configure(2) do |config|
           args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
   end
 
-  config.vm.provision "shell", inline: $ssh
-  config.vm.provision "shell", inline: $keys
-  config.vm.provision "shell", inline: $ipv4_forwarding
-  config.vm.provision "shell", inline: $emacs
-  
-  config.vm.define "leviathan1" do |lev1|
-    lev1.vm.hostname = "leviathan1"
-    lev1.vm.network :forwarded_port, guest: 22, host: 2201, id: "ssh"
-    lev1.vm.network :forwarded_port, guest: 8080, host: 8081
-    lev1.vm.network :private_network, ip: "192.169.0.101"
+  INLINES.each |i| do
+    config.vm.provision "shell", inline: i
   end
-  
-  config.vm.define "leviathan2" do |lev2|
-    lev2.vm.hostname = "leviathan2"
-    lev2.vm.network :forwarded_port, guest: 22, host: 2202, id: "ssh"
-    lev2.vm.network :forwarded_port, guest: 8080, host: 8082
-    lev2.vm.network :private_network, ip: "192.169.0.102"
+
+  (1..3).each do |i|
+    config.vm.define "leviathan#{i}" do |node|
+      node.vm.hostname = "leviathan#{i}"
+      node.vm.network :forwarded_port, guest: 22, host: 2200+i, id: "ssh"
+      node.vm.network :forwarded_port, guest: 8080, host: 8080+i
+      node.vm.network :private_network, ip: "192.169.0.10#{i}"
+      node.vm.provision "docker" do |d|
+        d.run "cont#{2*i-1}"
+        d.run "cont#{2*i}"
+    end
   end
-  
-  config.vm.define "leviathan3", autostart: false do |lev3|
-    lev3.vm.hostname = "leviathan3"
-    lev3.vm.network :forwarded_port, guest: 22, host: 2203, id: "ssh"
-    lev3.vm.network :forwarded_port, guest: 8080, host: 8083
-    lev3.vm.network :private_network, ip: "192.169.0.103"
-  end
-  
   
 end
