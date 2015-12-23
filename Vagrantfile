@@ -25,7 +25,11 @@ $emacs = <<SCRIPT
 apt-get install -y emacs24-nox
 SCRIPT
 
-INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs]
+$pv = <<SCRIPT
+apt-get install -y pv
+SCRIPT
+
+INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs, $pv]
 
 LINC_IMAGE = "mentels/dockerfiles:linc-multi-host-demo"
 LEVIATHAN_IMAGE = "mentels/dockerfiles:leviathan-multi-host-demo"
@@ -67,9 +71,9 @@ Vagrant.configure(2) do |config|
         d.run "cont#{2*i-1}", image: "ubuntu"
         d.run "cont#{2*i}", image: "ubuntu"
       end
-    end
-    node.vm.provision "shell" do |s|
-      s.inline "ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load' "
+      node.vm.provision "shell" do |s|
+        s.inline "ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | pv | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load' "
+      end
     end
   end
   
