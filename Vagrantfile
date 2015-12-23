@@ -37,7 +37,7 @@ docker cp id_rsa leviathan:/root/.ssh/id_rsa
 SCRIPT
 
 $leviathan_transfer = <<SCRIPT
-ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | pv | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load'
+ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | pv | ssh -o StrictHostKeyChecking=no vagrant@leviathan#$1 'bunzip2 | docker load'
 SCRIPT
 
 INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs, $pv]
@@ -78,7 +78,7 @@ Vagrant.configure(2) do |config|
       end
 
       if i != 1
-        node.vm.provision "shell", inline: $leviathan_transfer
+        node.vm.provision "shell", inline: $leviathan_transfer, args: "#{i}"
         node.vm.provision "docker" do |d|
           d.run "leviathan",
                 image: LEVIATHAN_IMAGE,
