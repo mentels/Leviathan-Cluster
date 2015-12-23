@@ -50,7 +50,7 @@ Vagrant.configure(2) do |config|
     d.version =  "1.9.1"
     d.pull_images LEVIATHAN_IMAGE
     d.run "leviathan",
-          image: LEVIATHAN_IMAGE
+          image: LEVIATHAN_IMAGE,
           args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
   end
 
