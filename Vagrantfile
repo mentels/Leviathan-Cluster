@@ -68,8 +68,8 @@ Vagrant.configure(2) do |config|
         if i == 1
           d.pull_images LINC_IMAGE
         end
-        d.run "cont#{2*i-1}", image: ubuntu
-        d.run "cont#{2*i}", image: ubuntu
+        d.run "cont#{2*i-1}", image: "ubuntu"
+        d.run "cont#{2*i}", image: "ubuntu"
       end
     end
   end
