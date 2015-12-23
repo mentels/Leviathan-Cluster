@@ -10,8 +10,6 @@ cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
 chown vagrant: id_rsa*
-docker exec leviathan mkdir -p /root/.ssh
-docker cp id_rsa leviathan:/root/.ssh/id_rsa
 SCRIPT
 
 $ipv4_forwarding = <<SCRIPT
@@ -27,6 +25,16 @@ SCRIPT
 
 $pv = <<SCRIPT
 apt-get install -y pv
+SCRIPT
+
+$docker_keys = <<SCRIPT
+cd /home/vagrant/.ssh
+docker exec leviathan mkdir -p /root/.ssh
+docker cp id_rsa leviathan:/root/.ssh/id_rsa
+SCRIPT
+
+$leviathan_transfer = <<SCRIPT
+ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | pv | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load'
 SCRIPT
 
 INLINES = [$ssh, $keys, $ipv4_forwarding, $emacs, $pv]
@@ -50,6 +58,10 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder '.', '/vagrant'
   config.vm.boot_timeout = 60
 
+  config.vm.provision "docker" do |d|
+    d.version =  "1.9.1"
+  end
+
   INLINES.each do |i|
     config.vm.provision "shell", inline: i
   end
@@ -60,18 +72,22 @@ Vagrant.configure(2) do |config|
       node.vm.network :forwarded_port, guest: 22, host: 2200+i, id: "ssh"
       node.vm.network :forwarded_port, guest: 8080, host: 8080+i
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
-      node.vm.provision "docker" do |d|
-        d.version =  "1.9.1"
-        if i == 1
-          d.pull_images LINC_IMAGE
-        end
-        d.run "leviathan",
-              image: LEVIATHAN_IMAGE,
-              args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
-        d.run "cont#{2*i-1}", image: "ubuntu"
-        d.run "cont#{2*i}", image: "ubuntu"
+
+      if i == 1
+        node.vm.provision "docker", images: [LINC_IMAGE]
       end
-      node.vm.provision "shell", inline: "ssh -o StrictHostKeyChecking=no vagrant@leviathan1 docker save #{LEVIATHAN_IMAGE} | bzip2 | pv | ssh -o StrictHostKeyChecking=no vagrant@leviathan#{i} 'bunzip2 | docker load' "
+
+      if i != 1
+        node.vm.provision "shell", inline: $leviathan_transfer
+        node.vm.provision "docker" do |d|
+          d.run "leviathan",
+                image: LEVIATHAN_IMAGE,
+                args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
+          d.run "cont#{2*i-1}", image: "ubuntu"
+          d.run "cont#{2*i}", image: "ubuntu"
+        end
+      end
+      node.vm.provision "shell", inline: $docker_keys  
     end
   end
   
