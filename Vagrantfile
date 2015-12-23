@@ -59,7 +59,7 @@ Vagrant.configure(2) do |config|
           args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
   end
 
-  INLINES.each |i| do
+  INLINES.each do |i|
     config.vm.provision "shell", inline: i
   end
 
