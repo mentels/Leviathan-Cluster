@@ -67,6 +67,7 @@ Vagrant.configure(2) do |config|
       node.vm.provision "docker" do |d|
         if i == 1
           d.pull_images LINC_IMAGE
+        end
         d.run "cont#{2*i-1}"
         d.run "cont#{2*i}"
       end
