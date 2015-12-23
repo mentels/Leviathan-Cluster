@@ -10,7 +10,7 @@ cd /home/vagrant/.ssh
 cp /vagrant/keys/id_rsa* .
 cat id_rsa.pub >> authorized_keys
 chown vagrant: id_rsa*
-docker cp /vagrant/keys/id_rsa* ivanos/leviathan:multi-host-demo:/root/.ssh
+docker cp /vagrant/keys/id_rsa leviathan:/root/.ssh
 SCRIPT
 
 $ipv4_forwarding = <<SCRIPT
@@ -51,6 +51,9 @@ Vagrant.configure(2) do |config|
     d.pull_images "ivanos/leviathan:rel-0.8.1"
     d.build_image '/vagrant/ivanos_dockerfiles/linc', args: "-t local/linc"
     d.build_image '/vagrant/ivanos_dockerfiles/leviathan', args: "-t ivanos/leviathan:multi-host-demo"
+    d.run "leviathan",
+          image: "ivanos/leviathan:multi-host-demo",
+          args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
   end
 
   config.vm.provision "shell", inline: $ssh
