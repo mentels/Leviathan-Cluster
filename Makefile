@@ -3,7 +3,7 @@
 all: keys id_rsa vagrant-plugins run
 
 run:
-	vagrant up
+	./run.sh
 
 keys:
 	mkdir keys
@@ -14,4 +14,3 @@ id_rsa: keys
 vagrant-plugins:
 	vagrant plugin install vagrant-hostmanager
 	vagrant plugin install vagrant-git
-	vagrant plugin install vagrant-cachier
