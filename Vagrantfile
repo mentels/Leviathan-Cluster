@@ -69,9 +69,10 @@ def provision_docker(node, host_id)
   node.vm.provision "docker_containers", type: "docker" do |d|
     d.run "leviathan",
           image: LEVIATHAN_IMAGE,
-          args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it"
-    d.run "cont#{2*host_id-1}", image: "ubuntu"
-    d.run "cont#{2*host_id}", image: "ubuntu"
+          args: "-v /run:/run -v /var:/host/var -v /proc:/host/proc --net=host --privileged=true -it",
+          restart: "no"
+    d.run "cont#{2*host_id-1}", image: "ubuntu", restart: "no"
+    d.run "cont#{2*host_id}", image: "ubuntu", restart: "no"
   end
   node.vm.provision "wait_for_leviathan_container",
                     type: "shell",
