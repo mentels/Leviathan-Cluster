@@ -44,11 +44,19 @@ until [ "`/usr/bin/docker inspect -f {{.State.Running}} leviathan`" == "true" ];
 done;
 SCRIPT
 
+$get_docker = <<SCRIPT
+wget -q -O - https://get.docker.io/gpg | apt-key add -
+echo deb http://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list
+apt-get update -qq; apt-get install -q -y --force-yes lxc-docker
+usermod -a -G docker vagrant
+SCRIPT
+
 def provision_with_shell(node)
   node.vm.provision "ssh_config", type: "shell", inline: $ssh_config
   node.vm.provision "ssh_keys", type: "shell", inline: $ssh_keys
   node.vm.provision "ipv4_forwarding", type: "shell", inline: $ipv4_forwarding
   node.vm.provision "packages", type: "shell", inline: $packages
+  node.vm.provision "get_docker", type: "shell", inline: $get_docker
 end
 
 def transfer_image(node, name, image, host_id)
@@ -60,7 +68,7 @@ def transfer_image(node, name, image, host_id)
 end
 
 def get_docker_images(node, host_id)
-  node.vm.provision "docker_exec", type: "docker"
+  # node.vm.provision "docker_exec", type: "docker"
   if host_id == 1
     node.vm.provision "docker_images_leviathan1",
                       type: "docker",
@@ -118,8 +126,8 @@ Vagrant.configure(2) do |config|
   (1..3).each do |i|
     config.vm.define "leviathan#{i}" do |node|
       node.vm.hostname = "leviathan#{i}"
-      node.vm.network :forwarded_port, guest: 22, host: 2200+i, id: "ssh"
-      node.vm.network :forwarded_port, guest: 8080, host: 8080+i
+      node.vm.network :forwarded_port, guest: 22, host: 2200+i, id: "ssh", auto_correct: true
+      node.vm.network :forwarded_port, guest: 8080, host: 8080+i, auto_correct: true
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
       provision_with_shell node
       get_docker_images node, i
