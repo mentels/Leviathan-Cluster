@@ -1,0 +1,18 @@
+{
+    "cenList": [
+        {
+            "cenID": "internal",
+            "containerIDs": [
+                {"mim1": "192.169.0.101"},
+                {"mim2": "192.169.0.101"}
+            ]
+        },
+        {
+            "cenID": "clients",
+            "containerIDs": [
+                {"mim1": "192.169.0.101"},
+                {"mim2": "192.169.0.101"}
+            ]
+        }
+    ]
+}

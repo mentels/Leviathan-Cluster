@@ -128,6 +128,9 @@ Vagrant.configure(2) do |config|
       node.vm.hostname = "leviathan#{i}"
       node.vm.network :forwarded_port, guest: 22, host: 2200+i, id: "ssh", auto_correct: true
       node.vm.network :forwarded_port, guest: 8080, host: 8080+i, auto_correct: true
+      node.vm.network :forwarded_port, guest: 5222, host: 5222+i, auto_correct: true
+      node.vm.network :forwarded_port, guest: 5280, host: 5280+i, auto_correct: true
+      node.vm.network :forwarded_port, guest: 5269, host: 5269+i, auto_correct: true
       node.vm.network :private_network, ip: "192.169.0.10#{i}"
       provision_with_shell node
       get_docker_images node, i

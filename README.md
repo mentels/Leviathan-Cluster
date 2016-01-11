@@ -9,19 +9,28 @@ The cluster consist of three VMs:
 * `leviathan1`
     * ip: 192.169.0.101
     * guest port: 8080, host port: 8081
+    * guest port: 5222, host port: 5222+1
+    * guest port: 5280, host port: 5280+1
+    * guest port: 5269, host port: 5269+1
     * running docker containers: leviathan, cont1, cont2
 * `leviathan2`
     * ip: 192.169.0.102
     * guest port: 8080, host port: 8082
+    * guest port: 5222, host port: 5222+2
+    * guest port: 5280, host port: 5280+2
+    * guest port: 5269, host port: 5269+2
     * running docker containers: leviathan, cont3, cont4
 * `leviathan3`
     * ip: 192.169.0.103
     * guest port: 8080, host port: 8083
+    * guest port: 5222, host port: 5222+1
+    * guest port: 5280, host port: 5280+1
+    * guest port: 5269, host port: 5269+1
     * running docker containers: leviathan, cont5, cont6
 
 The hosts and the containers share the same private key so that they can authenticate to each other.
 
-## Building and Running ##
+### Building and Running ###
 
 To bulid the cluster run:
 `make`
